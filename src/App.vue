@@ -1,55 +1,116 @@
 <template>
   <div id="app">
-    <div class="w-1/2 mx-auto">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+          integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <div class="w-3/4 mx-auto p-4">
       <div class="flex justify-between text-xs lg:text-sm">
-        <div class="text-lg lg:text-2xl"><h1>To-do List</h1></div>
-        <div class="flex flex-col sm:flex-row items-center ">
-          <input type="checkbox" class="mr-1" v-model="hide">
-          <p class="text-blue-700">
-            Gizlenenleri göster
-          </p>
+        <div class="text-lg lg:text-2xl"><h1>TODO-LİST</h1></div>
+          <div class="flex flex-col sm:flex-row items-center">
+          <button @click="itemHide">31</button>
+        </div>
+      </div>
+      <div class="flex flex-row justify-between my-8 text-sm font-medium">
+        <div class="p-1 text-blue-500 bg-blue-200">
+          <h1>TOTAL : {{ lists.length }}</h1>
+        </div>
+        <div class="p-1 text-green-500 bg-green-200">
+          <h1>SUCCESS : {{ completeHidden.length || 0 }}</h1>
+        </div>
+        <div class="p-1 text-red-500 bg-red-200">
+          <h1>PENDING : {{ listHidden.length }}</h1>
         </div>
       </div>
       <div class="flex flex-row justify-center">
-        <div>
-          <input class="bg-blue-300 rounded-l-lg outline-none p-1 lg:p-2 w-40 sm:w-56 lg:w-64 " maxlength="24" v-model="newItemTitle" required>
-        </div>
-        <div>
-          <button class="bg-blue-600 rounded-r-lg p-1 lg:p-2 text-amber-200" @click="addNewItem">Ekle</button>
+        <div class="w-full ">
+          <input class="outline-none p-1 lg:p-2 w-5/6 border-b border-[#11cdef] focus:border-[#075d6e]"
+                 maxlength="24"
+                 v-model="newItemTitle"
+                 placeholder="Buraya yazabilirsin..."
+                 v-on:keydown.enter="addNewItem($event)"
+                 required>
+          <i
+              class="fa fa-arrow-right submit-icon cursor-pointer text-lg"
+              @click="addNewItem($event)"
+              aria-hidden="true"
+          ></i>
         </div>
       </div>
-      <hr>
-        <div class="flex flex-col sm:flex-row shadow-3xl justify-between px-3 py-2 my-2 text-center" v-for="list in listHidden" :key="list.lists">
-          <div>{{list.task}}</div>
-          <div class="m-1"><input type="checkbox" v-model="list.comp" ></div>
-          <button class="bg-red-700 p-1 lg:p-1.5 rounded text-amber-300" @click="deleteItem">Sil</button>
+      <div
+          class=" w-5/6 flex flex-col sm:flex-row justify-between py-2 my-2 mx-auto text-center items-center justify-center"
+          v-for="(list, index) in listHidden" :key="index">
+        <div>{{ list.task }}</div>
+        <div class="w-40 flex flex-row items-center justify-between">
+        <div class="text-xs mr-2">{{ list.inDate }}</div>
+          <div class="flex flex-row">
+          <button
+              class="flex btn items-center justify-center"
+              @click="completeItem(list)"
+              :aria-label="list.comp ? 'Undone' : 'Done'"
+              :title="list.comp ? 'Undone' : 'Done'">
+            <i
+                aria-hidden="true"
+                class="material-icons"
+            >{{ list.comp ? 'check_box' : 'check_box_outline_blank' }}</i>
+          </button>
+          <button class="flex ml-2 rounded btn"
+                  aria-label="Delete"
+                  title="Delete"
+                  @click="deleteItem(list)">
+            <i aria-hidden="true" class="material-icons">delete</i>
+          </button>
+          </div>
         </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+import moment from "moment";
+
 export default {
   name: 'App',
   data() {
     return {
-    lists : [],
-      hide: false,
-      newItemTitle : ""
+      lists: [],
+      hide: true,
+      newItemTitle: ""
     }
   },
   computed: {
     listHidden() {
       return this.hide ? this.lists.filter(list => !list.comp) : this.lists
+    },
+    completeHidden() {
+      return this.lists.filter(list => list.comp === true)
     }
   },
   methods: {
+    itemHide() {
+      this.hide = !this.hide
+    },
     addNewItem() {
-      this.lists.push({ task: this.newItemTitle, comp: false});
+      if (this.newItemTitle === null || this.newItemTitle === "") {
+        alert("Bir şey yazmalısın!")
+      } else {
+        this.lists.push({
+          task: this.newItemTitle,
+          inDate: moment().locale('tr').format("MMM D"),
+          comp: false
+        });
+        localStorage.setItem("todoTask", JSON.stringify(this.lists))
+        this.newItemTitle = ""
+        console.log(this.lists)
+      }
+    },
+    completeItem(completedItem) {
+      completedItem.comp = !completedItem.comp
       localStorage.setItem("todoTask", JSON.stringify(this.lists))
     },
-    deleteItem() {
-      this.lists = this.lists.filter(list => !list.comp);
+    deleteItem(deletedItem) {
+      this.lists = this.lists.filter(list => list !== deletedItem)
       localStorage.setItem(`todoTask`, JSON.stringify(this.lists));
     }
   },
@@ -72,5 +133,13 @@ export default {
   margin-top: 60px;
   width: 100%;
   height: 100%;
+}
+
+#app .btn {
+  border: none;
+  background: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  color: #11cdef;
 }
 </style>

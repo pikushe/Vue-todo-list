@@ -1,5 +1,6 @@
 module.exports = {
   content: ["./src/**/*.{vue,js,ts,jsx,tsx}"],
+  darkMode: ['class', '[data-mode="dark"]'],
   theme: {
     extend: {
       boxShadow: {
